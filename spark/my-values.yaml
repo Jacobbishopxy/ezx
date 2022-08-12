@@ -1,0 +1,21 @@
+service:
+  type: NodePort
+
+# master:
+#   extraVolumes:
+#     - name: spark-data
+#       persistentVolumeClaim:
+#         claimName: spark-data-pvc
+#   extraVolumeMounts:
+#     - name: spark-data
+#       mountPath: /data/spark-data
+
+worker:
+  replicaCount: 4
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: xy-spark
+      whenUnsatisfiable: DoNotSchedule
+      labelSelector:
+        matchLabels:
+          xy-spark: right

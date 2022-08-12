@@ -1,0 +1,10 @@
+global:
+  postgresql:
+    auth:
+      postgresPassword: "xy123"
+      username: "jacobxy"
+      password: "qweqwe123"
+
+primary:
+  persistence:
+    existingClaim: "postgres-pvc"
