@@ -1,0 +1,10 @@
+service:
+  type: NodePort
+
+persistence:
+  enabled: true
+  mountPath: /data
+  accessModes:
+    - ReadWriteOnce
+  size: 10Gi
+  existingClaim: "minio-pvc"
