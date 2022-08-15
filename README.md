@@ -4,8 +4,86 @@ Easy transaction for data infrastructure.
 
 ## Charts
 
+- [kubeapps](https://github.com/vmware-tanzu/kubeapp)
 - [postgresql](https://github.com/bitnami/charts/tree/master/bitnami/postgresql)
+- [minio](https://github.com/bitnami/charts/tree/master/bitnami/minio)
 - [spark](https://github.com/bitnami/charts/tree/master/bitnami/spark)
+
+## Notes
+
+### Postgresql
+
+- Needs pre-declared PV & PVC for `my-values.yaml`:
+
+  ```yaml
+  primary:
+  persistence:
+    existingClaim: "postgres-pvc"
+  ```
+
+- Needs service as `NodePort` to expose internal IP:
+
+  ```yaml
+  apiVersion: v1
+  kind: Service
+  metadata:
+    name: xy-pg-port
+    namespace: dev
+  spec:
+    selector:
+      statefulset.kubernetes.io/pod-name: <pod name>
+    type: NodePort
+  ```
+
+### Minio
+
+- Needs pre-declared PV & PVC for `my-values.yaml`:
+
+  ```yaml
+  primary:
+  persistence:
+    existingClaim: "minio-pvc"
+  ```
+
+- Check username/password of a deployed standalone MinIO:
+
+  Due to `hostPath` persistent, login to node IP then execute:
+
+  ```sh
+  cat <minio path>/.root_user
+  cat <minio path>/.root_password
+  ```
+
+### Spark
+
+- Since we are using k8s spark cluster (see [detail](https://stackoverflow.com/a/68779353)), we need [bcpkix-jdk15on](https://mvnrepository.com/artifact/org.bouncycastle/bcpkix-jdk15on) & [bcprov-jdk15on](https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk15on) for `spark-submit`. In other words, these two dependencies must be included in `$SPARK_HOME/jars`.
+
+- In addition, we need [hadoop-aws](https://mvnrepository.com/artifact/org.apache.hadoop/hadoop-aws) as an extra package while executing `spark-submit`.
+
+- `spark-submit` example:
+
+  ```sh
+  spark-submit \
+   --master k8s://${MASTER_ADDR} \
+   --deploy-mode cluster \
+   --name ${POD_SPARK} \
+   --class Job1 \
+   --packages org.apache.hadoop:hadoop-aws:3.3.4 \
+   --conf spark.kubernetes.file.upload.path=s3a://${S3_BUCKET} \
+   --conf spark.kubernetes.container.image=${K8S_CONTAINER_IMAGE} \
+   --conf spark.hadoop.fs.s3a.endpoint=${SPARK_HADOOP_ENDPOINT} \
+   --conf spark.hadoop.fs.s3a.connection.ssl.enabled=false \
+   --conf spark.hadoop.fs.s3a.impl=org.apache.hadoop.fs.s3a.S3AFileSystem \
+   --conf spark.hadoop.fs.s3a.fast.upload=true \
+   --conf spark.hadoop.fs.s3a.path.style.access=true \
+   --conf spark.hadoop.fs.s3a.access.key=${SPARK_HADOOP_ACCESS_KEY} \
+   --conf spark.hadoop.fs.s3a.secret.key=${SPARK_HADOOP_SECRET_KEY} \
+   file://${TARGET_PATH}/target/scala-2.12/${PROJECT_JAR}
+  ```
+
+## Materials
+
+- [How to run Spark with Minio in K8s](https://www.youtube.com/watch?v=ZzFdYm_DqEM)
 
 ## Todo
 
