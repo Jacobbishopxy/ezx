@@ -3,6 +3,9 @@
 install:
 	helm install -n dev -f my-values.yaml xy-spark .
 
+upgrade:
+	helm upgrade -n dev -f my-values.yaml xy-spark .
+
 uninstall:
 	helm uninstall -n dev xy-spark
 

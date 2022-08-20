@@ -60,17 +60,35 @@ Easy transaction for data infrastructure.
 
 - In addition, we need [hadoop-aws](https://mvnrepository.com/artifact/org.apache.hadoop/hadoop-aws) as an extra package while executing `spark-submit`.
 
-- `spark-submit` example:
+- **[Client Mode]** Submit an application by `kubectl run` (k8s PVC is required for `${SHARE_VOLUME_ADDR}`):
+
+  ```sh
+  kubectl run \
+    --namespace ${K8S_NAMESPACE} ${JOB_NAME} \
+    --rm \
+    --tty -i \
+    --restart='Never' \
+    --image ${K8S_CONTAINER_IMAGE} \
+    -- spark-submit \
+    --master ${SPARK_ADDR} \
+    --deploy-mode cluster \
+    --class ${CLASS_NAME} \
+    ${SHARE_VOLUME_ADDR}/${PROJECT_JAR}
+  ```
+
+- **[Cluster Mode]** Submit an application by `spark-submit` (MinIO is required for `s3a`):
 
   ```sh
   spark-submit \
    --master k8s://${MASTER_ADDR} \
    --deploy-mode cluster \
-   --name ${POD_SPARK} \
-   --class Job1 \
+   --name ${JOB_NAME} \
+   --class ${CLASS_NAME} \
    --packages org.apache.hadoop:hadoop-aws:3.3.4 \
+   --conf spark.kubernetes.driverEnv.SPARK_MASTER_URL=${SPARK_ADDR} \
    --conf spark.kubernetes.file.upload.path=s3a://${S3_BUCKET} \
    --conf spark.kubernetes.container.image=${K8S_CONTAINER_IMAGE} \
+   --conf spark.kubernetes.namespace=${K8S_NAMESPACE} \
    --conf spark.hadoop.fs.s3a.endpoint=${SPARK_HADOOP_ENDPOINT} \
    --conf spark.hadoop.fs.s3a.connection.ssl.enabled=false \
    --conf spark.hadoop.fs.s3a.impl=org.apache.hadoop.fs.s3a.S3AFileSystem \

@@ -1,17 +1,23 @@
 service:
   type: NodePort
 
-# master:
-#   extraVolumes:
-#     - name: spark-data
-#       persistentVolumeClaim:
-#         claimName: spark-data-pvc
-#   extraVolumeMounts:
-#     - name: spark-data
-#       mountPath: /data/spark-data
+master:
+  # configOptions: -Dspark.ui.reverseProxy=true
+  # -Dspark.ui.reverseProxyUrl=https://spark.your-domain.com
+  configOptions: -Dspark.ui.reverseProxy=true
 
 worker:
   replicaCount: 4
+  # configOptions: -Dspark.ui.reverseProxy=true
+  # -Dspark.ui.reverseProxyUrl=https://spark.your-domain.com
+  configOptions: -Dspark.ui.reverseProxy=true
+  extraVolumes:
+    - name: spark-data
+      persistentVolumeClaim:
+        claimName: spark-nfs-pvc
+  extraVolumeMounts:
+    - name: spark-data
+      mountPath: /spark-data
   topologySpreadConstraints:
     - maxSkew: 1
       topologyKey: xy-spark
@@ -19,3 +25,7 @@ worker:
       labelSelector:
         matchLabels:
           xy-spark: right
+#
+# ingress:
+#   enabled: true
+#   hostname: spark.your-domain.com
