@@ -5,6 +5,9 @@ global:
       username: "jacobxy"
       password: "qweqwe123"
 
+volumePermissions:
+  enabled: true
+
 primary:
   persistence:
     existingClaim: "postgres-pvc"
