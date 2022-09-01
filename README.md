@@ -60,7 +60,37 @@ Easy transaction for data infrastructure.
 
 - In addition, we need [hadoop-aws](https://mvnrepository.com/artifact/org.apache.hadoop/hadoop-aws) as an extra package while executing `spark-submit`.
 
-- **[Client Mode]** Submit an application by `kubectl run` (k8s PVC is required for `${SHARE_VOLUME_ADDR}`):
+#### Client Mode
+
+- NFS share volume (Only required in Spark Client Mode, which used for uploading local JARs).
+
+  On the client server:
+
+  ```sh
+  sudo apt update
+  sudo apt install nfs-common
+  ```
+
+  Check available mounting directories:
+
+  ```sh
+  showmount -e <HOST_IP>
+  ```
+
+  Make the share directory and grant permission:
+
+  ```sh
+  sudo mkdir <YOUR_MOUNT_DIRECTORY> -p
+  sudo chown nobody:nogroup <YOUR_MOUNT_DIRECTORY>
+  ```
+
+  Mount host directory:
+
+  ```sh
+  sudo mount <HOST_IP>:<HOST_SHARE_ADDRESS> <YOUR_MOUNT_DIRECTORY>
+  ```
+
+- Submit an application by `kubectl run` (k8s PVC is required for `${SHARE_VOLUME_ADDR}`):
 
   ```sh
   kubectl run \
@@ -76,28 +106,30 @@ Easy transaction for data infrastructure.
     ${SHARE_VOLUME_ADDR}/${PROJECT_JAR}
   ```
 
-- **[Cluster Mode]** Submit an application by `spark-submit` (MinIO is required for `s3a`):
+#### Cluster Mode
 
-  ```sh
-  spark-submit \
-   --master k8s://${MASTER_ADDR} \
-   --deploy-mode cluster \
-   --name ${JOB_NAME} \
-   --class ${CLASS_NAME} \
-   --packages org.apache.hadoop:hadoop-aws:3.3.4 \
-   --conf spark.kubernetes.driverEnv.SPARK_MASTER_URL=${SPARK_ADDR} \
-   --conf spark.kubernetes.file.upload.path=s3a://${S3_BUCKET} \
-   --conf spark.kubernetes.container.image=${K8S_CONTAINER_IMAGE} \
-   --conf spark.kubernetes.namespace=${K8S_NAMESPACE} \
-   --conf spark.hadoop.fs.s3a.endpoint=${SPARK_HADOOP_ENDPOINT} \
-   --conf spark.hadoop.fs.s3a.connection.ssl.enabled=false \
-   --conf spark.hadoop.fs.s3a.impl=org.apache.hadoop.fs.s3a.S3AFileSystem \
-   --conf spark.hadoop.fs.s3a.fast.upload=true \
-   --conf spark.hadoop.fs.s3a.path.style.access=true \
-   --conf spark.hadoop.fs.s3a.access.key=${SPARK_HADOOP_ACCESS_KEY} \
-   --conf spark.hadoop.fs.s3a.secret.key=${SPARK_HADOOP_SECRET_KEY} \
-   file://${TARGET_PATH}/target/scala-2.12/${PROJECT_JAR}
-  ```
+Submit an application by `spark-submit` (MinIO is required for `s3a`):
+
+```sh
+spark-submit \
+ --master k8s://${MASTER_ADDR} \
+ --deploy-mode cluster \
+ --name ${JOB_NAME} \
+ --class ${CLASS_NAME} \
+ --packages org.apache.hadoop:hadoop-aws:3.3.4 \
+ --conf spark.kubernetes.driverEnv.SPARK_MASTER_URL=${SPARK_ADDR} \
+ --conf spark.kubernetes.file.upload.path=s3a://${S3_BUCKET} \
+ --conf spark.kubernetes.container.image=${K8S_CONTAINER_IMAGE} \
+ --conf spark.kubernetes.namespace=${K8S_NAMESPACE} \
+ --conf spark.hadoop.fs.s3a.endpoint=${SPARK_HADOOP_ENDPOINT} \
+ --conf spark.hadoop.fs.s3a.connection.ssl.enabled=false \
+ --conf spark.hadoop.fs.s3a.impl=org.apache.hadoop.fs.s3a.S3AFileSystem \
+ --conf spark.hadoop.fs.s3a.fast.upload=true \
+ --conf spark.hadoop.fs.s3a.path.style.access=true \
+ --conf spark.hadoop.fs.s3a.access.key=${SPARK_HADOOP_ACCESS_KEY} \
+ --conf spark.hadoop.fs.s3a.secret.key=${SPARK_HADOOP_SECRET_KEY} \
+ file://${TARGET_PATH}/target/scala-2.12/${PROJECT_JAR}
+```
 
 ## Materials
 

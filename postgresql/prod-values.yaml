@@ -5,14 +5,6 @@ global:
       username: "jacobxy"
       password: "qweqwe123"
 
-# TODO:
-# issue: https://github.com/helm/charts/issues/14721
-# only works on local or hostPath PV (changed group to xy and user to xy)
-# tried on NFS share but failed: `sudo chown -R 1001:1001 /postgresql`
-# maybe we should modify NFS server?
-volumePermissions:
-  enabled: true
-
 primary:
   persistence:
-    existingClaim: "postgres-hp-pvc"
+    existingClaim: "postgres-prod-pvc"
